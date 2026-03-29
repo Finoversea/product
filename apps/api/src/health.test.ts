@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { buildServer } from './index.js';
-import type { FastifyInstance } from 'fastify';
 
 describe('Health Route', () => {
-  let server: FastifyInstance;
+  let server: Awaited<ReturnType<typeof buildServer>>;
 
   beforeAll(async () => {
     server = await buildServer();

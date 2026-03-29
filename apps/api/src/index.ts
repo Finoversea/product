@@ -2,22 +2,19 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
 import swagger from '@fastify/swagger';
-import { pino } from 'pino';
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-    },
-  },
-});
 
 export const buildServer = async () => {
   const server = Fastify({
-    logger,
+    logger: {
+      level: process.env.LOG_LEVEL || 'info',
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:standard',
+        },
+      },
+    },
     requestIdHeader: 'x-request-id',
   });
 
@@ -70,8 +67,8 @@ const start = async () => {
 
   try {
     await server.listen({ port, host });
-    logger.info(`Server running at http://${host}:${port}`);
-    logger.info(`API documentation at http://${host}:${port}/documentation`);
+    server.log.info(`Server running at http://${host}:${port}`);
+    server.log.info(`API documentation at http://${host}:${port}/documentation`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);
