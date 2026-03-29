@@ -7,8 +7,10 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "smoke": "./scripts/smoke.sh"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
