@@ -1,0 +1,130 @@
+name: Staging Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      # Deploy API to staging
+      # Configure your platform's deploy command below
+      # Examples:
+      # - Fly.io: fly deploy --app product-api-staging
+      # - Render: curl -X POST "$RENDER_DEPLOY_HOOK_URL"
+      # - Custom: your deploy script
+      - name: Deploy API to staging
+        run: |
+          echo "Deploy API to staging platform"
+          # Add your deploy command here
+          # Example: fly deploy --app product-api-staging --config apps/api/fly.toml
+
+      # Deploy Web to staging
+      - name: Deploy Web to staging
+        run: |
+          echo "Deploy Web to staging platform"
+          # Add your deploy command here
+          # Example: fly deploy --app product-web-staging --config apps/web/fly.toml
+
+      - name: Wait for deployment
+        run: sleep 30
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Smoke test - API health check
+        run: |
+          # Replace with your staging API URL
+          STAGING_API_URL="${{ secrets.STAGING_API_URL || 'https://product-api-staging.fly.dev' }}"
+
+          echo "Testing API health at $STAGING_API_URL/health"
+
+          response=$(curl -sf "$STAGING_API_URL/health" 2>/dev/null || echo "FAILED")
+          if [ "$response" = "FAILED" ]; then
+            echo "::error::API health check failed - $STAGING_API_URL/health unreachable"
+            exit 1
+          fi
+
+          status=$(echo "$response" | jq -r '.status // empty')
+          if [ "$status" != "healthy" ]; then
+            echo "::error::API health check returned unhealthy status: $response"
+            exit 1
+          fi
+
+          echo "API health check passed: $response"
+
+      - name: Smoke test - Web homepage
+        run: |
+          # Replace with your staging Web URL
+          STAGING_WEB_URL="${{ secrets.STAGING_WEB_URL || 'https://product-web-staging.fly.dev' }}"
+
+          echo "Testing Web homepage at $STAGING_WEB_URL"
+
+          status_code=$(curl -sf -o /dev/null -w "%{http_code}" "$STAGING_WEB_URL" 2>/dev/null || echo "000")
+
+          if [ "$status_code" != "200" ]; then
+            echo "::error::Web homepage returned status $status_code (expected 200)"
+            exit 1
+          fi
+
+          echo "Web homepage check passed (status 200)"
+
+      - name: Smoke test - API docs accessible
+        run: |
+          STAGING_API_URL="${{ secrets.STAGING_API_URL || 'https://product-api-staging.fly.dev' }}"
+
+          echo "Testing API docs at $STAGING_API_URL/documentation"
+
+          status_code=$(curl -sf -o /dev/null -w "%{http_code}" "$STAGING_API_URL/documentation" 2>/dev/null || echo "000")
+
+          if [ "$status_code" != "200" ]; then
+            echo "::warning::API docs returned status $status_code (expected 200)"
+            # Non-blocking - docs are optional for smoke test
+          else
+            echo "API docs check passed (status 200)"
+          fi
+
+      - name: Report staging status
+        if: success()
+        run: |
+          echo "::notice::Staging deployment successful - all smoke tests passed"
+          echo "Staging URLs:"
+          echo "  API: ${{ secrets.STAGING_API_URL || 'https://product-api-staging.fly.dev' }}"
+          echo "  Web: ${{ secrets.STAGING_WEB_URL || 'https://product-web-staging.fly.dev' }}"
