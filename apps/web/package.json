@@ -20,6 +20,7 @@
     "lucide-react": "^0.323.0"
   },
   "devDependencies": {
+    "@product/config": "workspace:*",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
