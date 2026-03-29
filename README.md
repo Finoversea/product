@@ -2,11 +2,14 @@
 
 Monorepo containing the Product MVP application.
 
+**Repository**: https://github.com/Finoversea/product
+
 ## Tech Stack
 
-- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS, TanStack Query
-- **Backend**: Fastify, TypeScript, Drizzle ORM, PostgreSQL
-- **Infrastructure**: Docker, GitHub Actions CI/CD
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend**: Fastify, TypeScript, OpenAPI/Swagger docs
+- **Infrastructure**: Docker (PostgreSQL + Redis), GitHub Actions CI/CD
+- **Build**: Turborepo, pnpm workspaces
 
 ## Quick Start
 
@@ -20,7 +23,7 @@ Monorepo containing the Product MVP application.
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/Finoversea/product.git
 cd product
 
 # Install dependencies
@@ -28,10 +31,6 @@ pnpm install
 
 # Start databases (PostgreSQL + Redis)
 docker-compose up -d
-
-# Copy environment files
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
 
 # Run development servers (both API and Web)
 pnpm dev
@@ -91,13 +90,16 @@ The CI pipeline runs on every push and PR:
 
 - Lint check
 - TypeScript type checking
-- Unit tests
 - Build verification
 
-## Architecture
+## Development Status
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed system design.
+This is an MVP scaffolding project. Core features are ready for development:
 
-## Engineering Practices
+- Health check API endpoint
+- OpenAPI documentation auto-generated
+- Frontend welcome page with API docs link
 
-See [ENGINEERING.md](./ENGINEERING.md) for team practices and standards.
+## License
+
+MIT
