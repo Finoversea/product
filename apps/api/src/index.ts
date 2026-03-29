@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
 import swagger from '@fastify/swagger';
-import pino from 'pino';
+import { pino } from 'pino';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -15,7 +15,7 @@ const logger = pino({
   },
 });
 
-const buildServer = async () => {
+export const buildServer = async () => {
   const server = Fastify({
     logger,
     requestIdHeader: 'x-request-id',
@@ -43,7 +43,7 @@ const buildServer = async () => {
   });
 
   // Health check endpoint
-  server.get('/health', async (request, reply) => {
+  server.get('/health', async (_request, _reply) => {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -52,7 +52,7 @@ const buildServer = async () => {
   });
 
   // API info endpoint
-  server.get('/api', async (request, reply) => {
+  server.get('/api', async (_request, _reply) => {
     return {
       name: 'Product API',
       version: '1.0.0',
@@ -78,4 +78,7 @@ const start = async () => {
   }
 };
 
-start();
+// Only start server when run directly, not when imported for testing
+if (import.meta.url === `file://${process.argv[1]}`) {
+  start();
+}
